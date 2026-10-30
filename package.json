@@ -1,0 +1,13 @@
+{
+  "name": "school-notify-assistant",
+  "version": "1.0.0",
+  "description": "Spec-Driven Development implementation of school pickup authorizations via WhatsApp",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test tests/pickup.test.js"
+  },
+  "keywords": ["sdd", "spec-driven-development", "whatsapp", "school-ops"],
+  "license": "MIT"
+}
