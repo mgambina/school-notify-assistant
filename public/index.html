@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#174a45">
+  <title>SofIA | Demo de retiros escolares</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --forest: #174a45;
+      --forest-deep: #123b38;
+      --mint: #d9f3e7;
+      --paper: #fffefa;
+      --canvas: #edf2ef;
+      --ink: #1d302d;
+      --muted: #64736f;
+      --line: #d7e0dc;
+      --alert: #a5342b;
+      --alert-bg: #fff0ec;
+      --ok: #176345;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px 16px;
+      color: var(--ink);
+      background: linear-gradient(145deg, #153a37, #244c47 58%, #315c53);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app {
+      width: min(940px, 100%);
+      margin: 0 auto;
+      overflow: hidden;
+      background: var(--paper);
+      border-radius: 10px;
+      box-shadow: 0 24px 70px #081c1a55;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 82px;
+      padding: 16px 24px;
+      color: white;
+      background: var(--forest);
+    }
+    .mark {
+      display: grid;
+      width: 44px;
+      aspect-ratio: 1;
+      place-items: center;
+      color: var(--forest-deep);
+      background: var(--mint);
+      border-radius: 50%;
+      font-size: 22px;
+    }
+    .topbar h1 { margin: 0; font-size: 18px; font-weight: 650; }
+    .topbar p { margin: 4px 0 0; color: #d7e8e2; font-size: 13px; }
+    .demo-tag {
+      margin-left: auto;
+      padding: 6px 9px;
+      border: 1px solid #ffffff55;
+      border-radius: 4px;
+      color: #e7f2ef;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .92fr); }
+    .conversation {
+      display: flex;
+      min-height: 580px;
+      flex-direction: column;
+      padding: 22px;
+      background-color: #f2f0e9;
+      background-image: radial-gradient(#8b9b9225 1px, transparent 1px);
+      background-size: 18px 18px;
+      border-right: 1px solid var(--line);
+    }
+    .conversation h2, .controls h2 { margin: 0; font-size: 16px; }
+    .conversation-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .live-indicator { color: var(--ok); font-size: 12px; }
+    .messages { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 12px; overflow-y: auto; }
+    .message {
+      max-width: 94%;
+      padding: 12px 14px;
+      background: white;
+      border: 1px solid #e4e6df;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      animation: arrive 180ms ease-out;
+    }
+    .message.user { align-self: flex-end; background: var(--mint); border-color: #c4e6d5; }
+    .message.error { color: var(--alert); background: var(--alert-bg); border-color: #f2c8bf; }
+    .empty-note { margin: auto 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .controls { padding: 24px; }
+    .controls > p { margin: 7px 0 18px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .modes { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    .mode {
+      min-height: 42px;
+      padding: 8px 4px;
+      color: var(--muted);
+      background: transparent;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .mode[aria-selected="true"] { color: var(--forest); border-bottom-color: #258467; }
+    .field { display: block; margin-bottom: 14px; }
+    .field span { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 650; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 11px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid #cbd6d1;
+      border-radius: 5px;
+      outline: none;
+    }
+    .field textarea { min-height: 84px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: #258467; box-shadow: 0 0 0 3px #25846722; }
+    [hidden] { display: none !important; }
+    .submit {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      color: white;
+      background: #167756;
+      border: 0;
+      border-radius: 5px;
+      font-weight: 650;
+    }
+    .submit:hover { background: #105d42; }
+    .submit:disabled { cursor: wait; opacity: .65; }
+    .secondary-action {
+      display: block;
+      margin: 12px auto 0;
+      padding: 6px;
+      color: var(--forest);
+      background: transparent;
+      border: 0;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-size: 12px;
+    }
+    .disclaimer { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+    @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 700px) {
+      body { padding: 0; background: var(--canvas); }
+      .app { min-height: 100vh; border-radius: 0; }
+      .topbar { padding: 14px 16px; }
+      .layout { grid-template-columns: 1fr; }
+      .conversation { min-height: 300px; max-height: 42vh; padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .controls { padding: 20px 16px 28px; }
+      .demo-tag { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="mark" aria-hidden="true">S</div>
+      <div>
+        <h1>SofIA · Escuela Primaria</h1>
+        <p>Retiros y autorizaciones</p>
+      </div>
+      <span class="demo-tag">Demo local</span>
+    </header>
+    <div class="layout">
+      <section class="conversation" aria-labelledby="conversation-title">
+        <div class="conversation-heading">
+          <h2 id="conversation-title">Actividad</h2>
+          <span class="live-indicator">● En línea</span>
+        </div>
+        <div class="messages" id="messages" aria-live="polite" aria-relevant="additions">
+          <p class="empty-note" id="empty-note">Las confirmaciones y verificaciones aparecerán aquí.</p>
+        </div>
+      </section>
+      <section class="controls" aria-labelledby="controls-title">
+        <h2 id="controls-title">Probar el flujo</h2>
+        <p>Usa los datos de ejemplo para registrar o verificar un retiro.</p>
+        <div class="modes" role="tablist" aria-label="Tipo de operación">
+          <button class="mode" type="button" role="tab" data-mode="register" aria-selected="true">Autorizar</button>
+          <button class="mode" type="button" role="tab" data-mode="gate-check" aria-selected="false">Verificar</button>
+          <button class="mode" type="button" role="tab" data-mode="chat" aria-selected="false">Consulta</button>
+        </div>
+        <form id="operation-form">
+          <label class="field" id="student-field">
+            <span>Alumno</span>
+            <select id="student-name" name="studentName" required>
+              <option value="Lucas Demo">Lucas Demo · 3ro A</option>
+              <option value="Sofia Demo">Sofia Demo · 1ro B</option>
+            </select>
+          </label>
+          <div id="person-fields">
+            <label class="field">
+              <span>Nombre de quien retira</span>
+              <input id="person-name" name="name" value="Familiar Demo" autocomplete="off" required>
+            </label>
+            <label class="field">
+              <span>DNI o pasaporte</span>
+              <input id="person-id" name="idNumber" value="DEMO1234" autocomplete="off" required>
+            </label>
+          </div>
+          <label class="field" id="relationship-field">
+            <span>Vínculo con el alumno</span>
+            <input id="relationship" name="relationship" value="Familiar" autocomplete="off" required>
+          </label>
+          <label class="field" id="query-field" hidden>
+            <span>Consulta</span>
+            <textarea id="query" name="message" placeholder="Ej.: ¿Qué notas obtuvo el alumno?" required></textarea>
+          </label>
+          <button class="submit" id="submit-button" type="submit">Registrar autorización</button>
+          <button class="secondary-action" id="unknown-person" type="button" hidden>Probar una persona no autorizada</button>
+        </form>
+        <p class="disclaimer">Prototipo educativo con datos ficticios. No se conecta a WhatsApp y no debe utilizarse para decisiones reales de retiro.</p>
+      </section>
+    </div>
+  </main>
+  <script>
+    const messages = document.getElementById('messages');
+    const emptyNote = document.getElementById('empty-note');
+    const form = document.getElementById('operation-form');
+    const studentField = document.getElementById('student-field');
+    const personFields = document.getElementById('person-fields');
+    const relationshipField = document.getElementById('relationship-field');
+    const queryField = document.getElementById('query-field');
+    const queryInput = document.getElementById('query');
+    const submitButton = document.getElementById('submit-button');
+    const unknownPersonButton = document.getElementById('unknown-person');
+    let activeMode = 'register';
+
+    function addMessage(text, kind = 'bot') {
+      emptyNote.hidden = true;
+      const message = document.createElement('div');
+      message.className = `message ${kind}`;
+      message.textContent = text;
+      messages.appendChild(message);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setMode(mode) {
+      activeMode = mode;
+      document.querySelectorAll('.mode').forEach(button => {
+        button.setAttribute('aria-selected', String(button.dataset.mode === mode));
+      });
+      const isQuery = mode === 'chat';
+      const isGateCheck = mode === 'gate-check';
+      studentField.hidden = isQuery;
+      personFields.hidden = isQuery;
+      relationshipField.hidden = isGateCheck || isQuery;
+      queryField.hidden = !isQuery;
+      document.getElementById('student-name').required = !isQuery;
+      document.getElementById('person-name').required = !isQuery;
+      document.getElementById('person-id').required = !isQuery;
+      document.getElementById('relationship').required = mode === 'register';
+      queryInput.required = isQuery;
+      submitButton.textContent = mode === 'register'
+        ? 'Registrar autorización'
+        : isGateCheck ? 'Verificar en puerta' : 'Enviar consulta';
+      unknownPersonButton.hidden = !isGateCheck;
+    }
+
+    document.querySelectorAll('.mode').forEach(button => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+
+    unknownPersonButton.addEventListener('click', () => {
+      document.getElementById('person-name').value = 'Persona No Autorizada';
+      document.getElementById('person-id').value = 'DEMO9999';
+    });
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const studentName = document.getElementById('student-name').value;
+      const name = document.getElementById('person-name').value.trim();
+      const idNumber = document.getElementById('person-id').value.trim();
+      const relationship = document.getElementById('relationship').value.trim();
+      let endpoint;
+      let payload;
+      let summary;
+
+      if (activeMode === 'register') {
+        endpoint = '/api/register';
+        payload = { studentName, name, idNumber, relationship };
+        summary = `Autorizar a ${name} para retirar a ${studentName}`;
+      } else if (activeMode === 'gate-check') {
+        endpoint = '/api/gate-check';
+        payload = { studentName, name, idNumber };
+        summary = `Verificar a ${name} para retirar a ${studentName}`;
+      } else {
+        endpoint = '/api/chat';
+        payload = { message: queryInput.value.trim() };
+        summary = payload.message;
+      }
+
+      addMessage(summary, 'user');
+      submitButton.disabled = true;
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.reply || 'No se pudo completar la operación.');
+        addMessage(data.reply);
+      } catch (error) {
+        addMessage(error.message || 'No se pudo contactar al servidor.', 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

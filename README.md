@@ -1,9 +1,9 @@
-# School WhatsApp Operations Assistant (Spec-Driven Development)
+# School Pickup Authorization Demo (Spec-Driven Development)
 ## AI Product Engineer - Codigo Facilito - Homework 
 
-A local prototype for an elementary school's pickup authorization workflow, designed around the needs of a school serving 300 students and coordinated by Sofía. It demonstrates registration, gate verification, and academic-query redirection without requiring parents or teachers to install an application.
+A browser-based prototype for an elementary school's pickup authorization workflow, designed around the needs of a school serving 300 students and coordinated by Sofía. It demonstrates registration, gate verification, and academic-query redirection without requiring parents or teachers to install an application.
 
-This repository does not connect to WhatsApp or a persistent school database. It uses an in-memory sample registry and console output; authorizations are lost when the process exits.
+This repository does not connect to WhatsApp or a persistent school database. It uses synthetic sample records stored in memory; authorizations are lost when the process exits. Do not enter real student or identity information.
 
 ---
 
@@ -20,6 +20,12 @@ This repository does not connect to WhatsApp or a persistent school database. It
 
 ### Prerequisites
 - Node.js v18 or later.
+
+### Run the web demo
+```bash
+npm start
+```
+Open `http://localhost:3000`. In CodeSandbox, start the same command and open the preview for port `3000` (or the port shown in the terminal).
 
 ### Run Automated Acceptance Tests
 ```bash

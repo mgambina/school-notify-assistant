@@ -1,7 +1,7 @@
 {
   "name": "school-notify-assistant",
   "version": "1.0.0",
-  "description": "Spec-Driven Development implementation of school pickup authorizations via WhatsApp",
+  "description": "Spec-driven browser demo for school pickup authorizations",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

@@ -1,5 +1,6 @@
-import { test, describe, beforeEach } from 'node:test';
+import { test, describe, beforeEach, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { createServer } from '../src/index.js';
 import { 
   registerEmergencyPickup, 
   gateCheck, 
@@ -34,7 +35,7 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
     assert.throws(
       () => {
         registerEmergencyPickup({
-          studentName: 'Lucas Martinez',
+          studentName: 'Lucas Demo',
           authorizedPerson: {
             name: 'Clara Gomez',
             idNumber: '',
@@ -48,7 +49,7 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
     assert.throws(
       () => {
         registerEmergencyPickup({
-          studentName: 'Lucas Martinez',
+          studentName: 'Lucas Demo',
           authorizedPerson: {
             name: 'Clara Gomez',
             idNumber: '123',
@@ -62,7 +63,7 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
     assert.throws(
       () => {
         registerEmergencyPickup({
-          studentName: 'Lucas Martinez',
+          studentName: 'Lucas Demo',
           authorizedPerson: {
             name: 'Clara Gomez',
             idNumber: '12-345',
@@ -76,7 +77,7 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
     assert.throws(
       () => {
         registerEmergencyPickup({
-          studentName: 'Lucas Martinez',
+          studentName: 'Lucas Demo',
           authorizedPerson: {
             name: 'Clara Gomez',
             idNumber: '34567890',
@@ -90,25 +91,25 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
 
   test('AC-3: Must issue a confirmation with a unique tracking code matching #PICK-[A-Z0-9]{4,6}', () => {
     const response = registerEmergencyPickup({
-      studentName: 'Lucas Martinez',
+      studentName: 'Lucas Demo',
       authorizedPerson: {
-        name: 'Clara Gomez',
-        idNumber: '34567890',
+        name: 'Familiar Demo',
+        idNumber: 'DEMO1234',
         relationship: 'Tía'
       }
     });
 
     assert.equal(response.success, true);
     assert.match(response.code, /^#PICK-[A-Z0-9]{4,6}$/);
-    assert.match(response.message, /Lucas Martinez \(3ro A\)/);
-    assert.match(response.message, /Clara Gomez/);
-    assert.match(response.message, /34567890/);
+    assert.match(response.message, /Lucas Demo \(3ro A\)/);
+    assert.match(response.message, /Familiar Demo/);
+    assert.match(response.message, /DEMO1234/);
 
     const secondResponse = registerEmergencyPickup({
-      studentName: 'Lucas Martinez',
+      studentName: 'Lucas Demo',
       authorizedPerson: {
-        name: 'Clara Gomez',
-        idNumber: '34567890',
+        name: 'Familiar Demo',
+        idNumber: 'DEMO1234',
         relationship: 'Tía'
       }
     });
@@ -117,29 +118,29 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
 
   test('AC-4: Gate check requires matching name and ID for permanent and same-day authorization', () => {
     registerEmergencyPickup({
-      studentName: 'Lucas Martinez',
+      studentName: 'Lucas Demo',
       authorizedPerson: {
-        name: 'Clara Gomez',
-        idNumber: '34567890',
+        name: 'Familiar Demo',
+        idNumber: 'DEMO1234',
         relationship: 'Tía'
       }
     });
 
-    const checkValid = gateCheck('Lucas Martinez', { name: 'Clara Gomez', idNumber: '34567890' });
+    const checkValid = gateCheck('Lucas Demo', { name: 'Familiar Demo', idNumber: 'DEMO1234' });
     assert.equal(checkValid.status, 'AUTHORIZED');
 
-    const wrongId = gateCheck('Lucas Martinez', { name: 'Clara Gomez', idNumber: '99999999' });
+    const wrongId = gateCheck('Lucas Demo', { name: 'Familiar Demo', idNumber: 'DEMO9999' });
     assert.equal(wrongId.status, 'UNAUTHORIZED');
 
-    const checkGuardian = gateCheck('Lucas Martinez', { name: 'Elena Gambina', idNumber: '30111222' });
+    const checkGuardian = gateCheck('Lucas Demo', { name: 'Elena Demo', idNumber: 'DEMO1122' });
     assert.equal(checkGuardian.status, 'AUTHORIZED');
 
-    const checkInvalid = gateCheck('Lucas Martinez', { name: 'Desconocido Perez', idNumber: '12345678' });
+    const checkInvalid = gateCheck('Lucas Demo', { name: 'Persona Desconocida', idNumber: 'DEMO8888' });
     assert.equal(checkInvalid.status, 'UNAUTHORIZED');
     assert.match(checkInvalid.message, /NO entregar al alumno/);
 
     database.temporaryAuthorizations[0].pickupDate = '2000-01-01';
-    const expiredAuthorization = gateCheck('Lucas Martinez', { name: 'Clara Gomez', idNumber: '34567890' });
+    const expiredAuthorization = gateCheck('Lucas Demo', { name: 'Familiar Demo', idNumber: 'DEMO1234' });
     assert.equal(expiredAuthorization.status, 'UNAUTHORIZED');
   });
 
@@ -155,5 +156,90 @@ describe('Spec Verification: Emergency Pickup Authorization', () => {
     const normalQuery = handleIncomingQuery('Quiero registrar un retiro para hoy');
     assert.equal(normalQuery, null);
     assert.equal(handleIncomingQuery('Anotaste el horario de retiro'), null);
+  });
+
+  describe('Browser demo HTTP API', () => {
+    let server;
+    let baseUrl;
+
+    before(async () => {
+      server = createServer();
+      await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+      baseUrl = `http://127.0.0.1:${server.address().port}`;
+    });
+
+    after(async () => {
+      if (!server) return;
+      await new Promise(resolve => {
+        server.close(resolve);
+        server.closeAllConnections();
+      });
+    });
+
+    async function postJson(path, payload) {
+      return fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    test('serves the browser interface', async () => {
+      const response = await fetch(baseUrl);
+      const html = await response.text();
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get('content-type'), /text\/html/);
+      assert.match(html, /id="operation-form"/);
+    });
+
+    test('registers submitted details and verifies name plus ID', async () => {
+      const registration = await postJson('/api/register', {
+        studentName: 'Lucas Demo',
+        name: 'Browser Demo Adult',
+        idNumber: 'WEB12345',
+        relationship: 'Aunt'
+      });
+      const registrationBody = await registration.json();
+
+      assert.equal(registration.status, 201);
+      assert.match(registrationBody.reply, /Browser Demo Adult/);
+      assert.deepEqual(database.temporaryAuthorizations[0].authorizedPerson, {
+        name: 'Browser Demo Adult',
+        idNumber: 'WEB12345',
+        relationship: 'Aunt'
+      });
+
+      const authorized = await postJson('/api/gate-check', {
+        studentName: 'Lucas Demo',
+        name: 'Browser Demo Adult',
+        idNumber: 'WEB12345'
+      });
+      assert.equal(authorized.status, 200);
+      assert.equal((await authorized.json()).status, 'AUTHORIZED');
+
+      const wrongId = await postJson('/api/gate-check', {
+        studentName: 'Lucas Demo',
+        name: 'Browser Demo Adult',
+        idNumber: 'WEB99999'
+      });
+      assert.equal((await wrongId.json()).status, 'UNAUTHORIZED');
+    });
+
+    test('rejects invalid requests and does not register ordinary or academic messages', async () => {
+      const invalid = await postJson('/api/register', {
+        studentName: 'Lucas Demo',
+        name: 'Browser Demo Adult',
+        idNumber: 'WEB12345'
+      });
+      assert.equal(invalid.status, 400);
+      assert.equal(database.temporaryAuthorizations.length, 0);
+
+      const academic = await postJson('/api/chat', { message: '¿Qué notas obtuvo Lucas?' });
+      assert.match((await academic.json()).reply, /portal académico oficial/);
+
+      const ordinary = await postJson('/api/chat', { message: 'Hola, ¿cómo estás?' });
+      assert.equal(ordinary.status, 200);
+      assert.equal(database.temporaryAuthorizations.length, 0);
+    });
   });
 });

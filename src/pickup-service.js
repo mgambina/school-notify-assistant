@@ -5,19 +5,19 @@ export const database = {
   students: [
     {
       id: "STU-001",
-      name: "Lucas Martinez",
+      name: "Lucas Demo",
       grade: "3ro A",
       permanentGuardians: [
-        { name: "Elena Gambina", idNumber: "30111222", relationship: "Madre" },
-        { name: "Roberto Martinez", idNumber: "29888777", relationship: "Padre" }
+        { name: "Elena Demo", idNumber: "DEMO1122", relationship: "Madre" },
+        { name: "Roberto Demo", idNumber: "DEMO8877", relationship: "Padre" }
       ]
     },
     {
       id: "STU-002",
-      name: "Sofia Gomez",
+      name: "Sofia Demo",
       grade: "1ro B",
       permanentGuardians: [
-        { name: "Mariana Gomez", idNumber: "32444555", relationship: "Madre" }
+        { name: "Mariana Demo", idNumber: "DEMO4455", relationship: "Madre" }
       ]
     }
   ],
