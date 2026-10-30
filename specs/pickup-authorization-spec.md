@@ -20,7 +20,7 @@ The system:
 - **AC-2 (Mandatory Data Capture):**
   - Registration MUST require:
     1. Authorized person's Full Legal Name (non-empty string).
-    2. National ID number (alphanumeric, minimum 6 characters).
+    2. National ID number (alphanumeric after trimming, minimum 6 characters).
     3. Relationship to student (e.g., aunt, grandparent, family friend).
   - If any of these three fields is missing or invalid, the system MUST reject the registration and prompt for the missing data.
 
@@ -30,10 +30,15 @@ The system:
     - Authorized person's Name and National ID.
     - Timestamp of registration.
     - A unique tracking code matching the pattern `^#PICK-[A-Z0-9]{4,6}$`.
+  - A tracking code MUST NOT duplicate a code already present in the authorization registry.
 
 - **AC-4 (Gatekeeper Verification & Alert):**
-  - When staff queries a student's pickup status (`gateCheck`), if the person attempting pickup matches either a permanent guardian or a valid same-day authorized person, the system MUST return status `AUTHORIZED`.
-  - If the person attempting pickup is not on the permanent or emergency list, the system MUST return status `UNAUTHORIZED` with an explicit directive instructing staff NOT to release the student and to alert coordination.
+  - A gate check MUST include the student's name and the pickup person's full legal name and National ID.
+  - A permanent guardian or temporary authorization is a match only when both the person's name and National ID match the registry, ignoring letter case and surrounding whitespace.
+  - Temporary authorizations are valid only on the local calendar date on which they were registered.
+  - If the person matches a permanent guardian or a valid same-day authorization, the system MUST return status `AUTHORIZED`.
+  - If the person is unknown, the ID does not match, or a temporary authorization has expired, the system MUST return status `UNAUTHORIZED` with an explicit directive instructing staff NOT to release the student and to alert coordination.
 
 - **AC-5 (Out-of-Scope Boundary Enforcement):**
   - Any query containing keywords related to academic grades, homework, or report cards MUST be rejected with a standardized refusal redirecting the user to the school's primary academic portal.
+  - Keyword matching MUST ignore letter case and Spanish diacritics (for example, `boletín` and `boletin` are equivalent).

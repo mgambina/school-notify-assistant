@@ -1,6 +1,6 @@
 import { registerEmergencyPickup, gateCheck, handleIncomingQuery } from './pickup-service.js';
 
-console.log("=== DEMO: School WhatsApp Operations Assistant ===\n");
+console.log("=== DEMO: School Pickup Authorization Prototype ===\n");
 
 console.log("--- 1. Testing Out-of-Scope Query ---");
 const outOfScopeResponse = handleIncomingQuery("Hola, ¿cómo le fue a Lucas en la tarea de matemáticas?");
@@ -24,10 +24,10 @@ try {
 console.log();
 
 console.log("--- 3. Gate Verification (Authorized Person) ---");
-const checkOk = gateCheck("Lucas Martinez", "Mariana Gambina");
+const checkOk = gateCheck("Lucas Martinez", { name: "Mariana Gambina", idNumber: "34567890" });
 console.log(checkOk.message);
 console.log();
 
 console.log("--- 4. Gate Verification (Unauthorized Attempt) ---");
-const checkFail = gateCheck("Lucas Martinez", "Carlos Perez");
+const checkFail = gateCheck("Lucas Martinez", { name: "Carlos Perez", idNumber: "12345678" });
 console.log(checkFail.message);
